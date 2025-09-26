@@ -1,73 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Safe Fit Store | Home</title>
-    <style>
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-      }
-      nav {
-        background: #222;
-        padding: 1rem;
-      }
-      nav a {
-        color: white;
-        margin: 0 10px;
-        text-decoration: none;
-      }
-      nav a.active {
-        font-weight: bold;
-      }
-      .hero-section {
-        background: url("images/backgrounds (2).jpg") center/cover no-repeat;
-        height: 80vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        text-align: center;
-      }
-      .overlay {
-        background: rgba(0, 0, 0, 0.6);
-        padding: 30px;
-        border-radius: 8px;
-      }
-      footer {
-        background: #222;
-        color: white;
-        text-align: center;
-        padding: 1rem;
-      }
-    </style>
-  </head>
-  <body>
-    <nav>
-      <a href="index.html" class="active">Home</a>
-      <a href="products.html">Products</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a href="Login.html">Login</a>
-    </nav>
-    <div class="hero-section">
-      <div class="overlay">
-        <h1>Welcome to Safe Fit Store</h1>
-        <p>Your digital destination for certified safety attire.</p>
-        <a
-          href="products.html"
-          style="
-            color: black;
-            background: yellow;
-            padding: 10px 20px;
-            text-decoration: none;
-            font-weight: bold;
-          "
-          >Browse Products</a
-        >
-      </div>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Safe Fit Store | Home</title>
+<style>
+  /* Reset & base */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; }
+
+  /* Navigation */
+  nav {
+    background: #222;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 6px 10px;
+    transition: all 0.3s;
+  }
+  nav a:hover { color: yellow; }
+  nav a.active {
+    font-weight: bold;
+    border-bottom: 2px solid yellow;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    background: url("images/backgrounds (2).jpg") center/cover no-repeat;
+    height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    text-align: center;
+    color: white;
+  }
+  .hero-section::after {
+    content: '';
+    position: absolute;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+  }
+  .overlay {
+    position: relative;
+    z-index: 1;
+    padding: 30px 20px;
+    border-radius: 12px;
+    max-width: 700px;
+  }
+  .overlay h1 {
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+  }
+  .overlay p {
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+  }
+  .btn {
+    display: inline-block;
+    color: #222;
+    background: yellow;
+    font-weight: bold;
+    padding: 12px 25px;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .btn:hover {
+    background: orange;
+    transform: translateY(-2px);
+  }
+
+  /* Footer */
+  footer {
+    background: #222;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .overlay h1 { font-size: 2rem; }
+    .overlay p { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="active">Home</a>
+    <a href="product.html">Product</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <a href="login.html">Login</a>
+  </nav>
+
+  <div class="hero-section">
+    <div class="overlay">
+      <h1>Welcome to Safe Fit Store</h1>
+      <p>Your digital destination for certified safety attire — helmets, gloves, boots, and more.</p>
+      <a href="product.html" class="btn">Browse Products</a>
     </div>
-    <footer>&copy; 2025 Safe Fit Store. All rights reserved.</footer>
-  </body>
+  </div>
+
+  <footer>&copy; 2025 Safe Fit Store. All rights reserved.</footer>
+
+</body>
 </html>

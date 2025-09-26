@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Orders – SafeFit</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #007bff;
+      text-align: center;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin: 20px auto;
+      text-decoration: none;
+      color: white;
+      background: #28a745;
+      padding: 10px 18px;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+
+    .back-link:hover {
+      background: #218838;
+    }
+
+    .orders-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .orders-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .orders-table th,
+    .orders-table td {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    .orders-table th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .orders-table tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .orders-table td button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .orders-table td button:hover:not(:disabled) {
+      background: #0056b3;
+    }
+
+    .orders-table td button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .note {
+      font-style: italic;
+      color: #555;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    ul {
+      max-width: 800px;
+      margin: 20px auto;
+      padding-left: 20px;
+      color: #333;
+    }
+
+    ul li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🧾 My Orders</h2>
+
+  <div class="orders-container">
+    <!-- User Instructions -->
+    <ul>
+      <li>✅ View all your past and current orders.</li>
+      <li>🚚 Track shipping status of orders.</li>
+      <li>📄 See total cost, order date, and order number.</li>
+      <li>↩ Request return or refund on delivered orders.</li>
+    </ul>
+
+    <!-- Orders Table -->
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Date</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="orders-body">
+        <!-- Orders will be dynamically loaded here -->
+      </tbody>
+    </table>
+
+    <p class="note">Loading orders...</p>
+
+    <a href="Users Dashboard.html" class="back-link">← Back to Dashboard</a>
+  </div>
+
+  <script>
+    // Replace with your JWT token after login
+    const token = localStorage.getItem("token"); // You should store the JWT after login
+
+    async function fetchOrders() {
+      const tbody = document.getElementById("orders-body");
+      tbody.innerHTML = ""; // Clear table
+      try {
+        const res = await fetch("http://localhost:5000/api/orders", {
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          tbody.innerHTML = '<tr><td colspan="5">❌ Unauthorized. Please login again.</td></tr>';
+          return;
+        }
+
+        const orders = await res.json();
+
+        if (orders.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">No orders found.</td></tr>';
+          return;
+        }
+
+        orders.forEach(order => {
+          const tr = document.createElement("tr");
+
+          tr.innerHTML = `
+            <td>#${order.id}</td>
+            <td>${new Date(order.date || order.created_at).toLocaleDateString()}</td>
+            <td>${order.total ? 'K' + order.total.toFixed(2) : 'K0.00'}</td>
+            <td>${order.status}</td>
+            <td>${getActionButton(order.status, order.id)}</td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+
+        document.querySelector(".note").textContent = "All orders are displayed above.";
+
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="5">Error loading orders.</td></tr>';
+      }
+    }
+
+    function getActionButton(status, orderId) {
+      if (status.toLowerCase() === "shipped") {
+        return `<button onclick="trackOrder(${orderId})">Track</button>`;
+      } else if (status.toLowerCase() === "delivered") {
+        return `<button onclick="returnOrder(${orderId})">Return</button>`;
+      } else {
+        return `<button disabled>--</button>`;
+      }
+    }
+
+    function trackOrder(orderId) {
+      alert("Tracking info for order #" + orderId + " coming soon!");
+      // You can redirect to a tracking page or show a modal
+    }
+
+    async function returnOrder(orderId) {
+      const confirmReturn = confirm("Do you want to request a return for order #" + orderId + "?");
+      if (!confirmReturn) return;
+
+      try {
+        // Here you can call your API to request a return
+        alert("Return request submitted for order #" + orderId);
+      } catch (err) {
+        alert("Error submitting return request.");
+      }
+    }
+
+    // Load orders on page load
+    fetchOrders();
+  </script>
+</body>
+</html>
+

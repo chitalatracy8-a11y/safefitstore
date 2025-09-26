@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SafeFit Store - Login</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif; }
+
+    body {
+      background: url('images/BACKGROUNDCONTACT.jpg') no-repeat center/cover;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav {
+      background: rgba(0,115,166,0.85);
+      padding: 15px 40px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    nav a {
+      padding: 10px 20px;
+      background: white;
+      color: #0073a6;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    nav a:hover, nav a.active { background:#005f80; color:white; }
+
+    .content {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 0;
+    }
+
+    .login-container {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(15px);
+      padding: 35px 30px;
+      border-radius: 20px;
+      width: 380px;
+      max-width: 90%;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.25);
+      animation: fadeIn 0.8s ease-in-out;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 25px;
+      color: #fff;
+      text-shadow: 1px 1px 4px #000;
+      font-size: 2rem;
+    }
+
+    form { display: flex; flex-direction: column; gap: 15px; }
+
+    label {
+      text-align: left;
+      color: white;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px #000;
+      font-size: 14px;
+    }
+
+    input[type="text"], input[type="password"] {
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      background: rgba(255,255,255,0.9);
+    }
+
+    button {
+      padding: 12px;
+      background: #008cba;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 16px;
+    }
+    button:hover { background: #005f80; transform: translateY(-2px); }
+
+    .link {
+      margin-top: 15px;
+      color: #fff;
+    }
+    .link a {
+      color: #ffd700;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .link a:hover { text-decoration: underline; }
+
+    .error-message {
+      margin-top: 10px;
+      font-size: 14px;
+      min-height: 18px;
+    }
+    .error { color: yellow; }
+    .success { color: lightgreen; }
+
+    footer {
+      background: #222;
+      color: white;
+      text-align: center;
+      padding: 15px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="product.html">Products</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <a href="register.html">Register</a>
+  </nav>
+
+  <section class="content">
+    <div class="login-container">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter your Username" required autocomplete="username" />
+        
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your Password" required autocomplete="current-password" />
+        
+        <button type="submit">Login</button>
+        <div id="messageBox" class="error-message"></div>
+      </form>
+      <div class="link">
+        <p>Don’t have an account? <a href="register.html">Register here</a></p>
+      </div>
+    </div>
+  </section>
+
+  <footer>&copy; 2025 Safe Fit Store. All rights reserved.</footer>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const messageBox = document.getElementById('messageBox');
+    const button = loginForm.querySelector("button");
+
+    loginForm.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const username = loginForm.username.value.trim();
+      const password = loginForm.password.value;
+
+      if (!username || !password) {
+        messageBox.textContent = "⚠️ Please enter both username and password.";
+        messageBox.className = "error-message error";
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "Logging in...";
+      messageBox.textContent = ""; // clear old messages
+
+      try {
+        const res = await fetch("http://localhost:5000/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          // Save login data
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("role", data.role);
+
+          // Show success message
+          messageBox.textContent = "✅ Login successful! Redirecting...";
+          messageBox.className = "error-message success";
+
+          // Redirect after short delay
+          setTimeout(() => {
+            window.location.href = (data.role === "admin") 
+              ? "admin_dashboard.html" 
+              : "user_dashboard.html";
+          }, 1500);
+        } else {
+          messageBox.textContent = data.message || "❌ Invalid username or password.";
+          messageBox.className = "error-message error";
+        }
+      } catch (err) {
+        messageBox.textContent = "🚨 Server error. Please try again later.";
+        messageBox.className = "error-message error";
+      }
+
+      button.disabled = false;
+      button.textContent = "Login";
+    });
+  </script>
+
+</body>
+</html>
+

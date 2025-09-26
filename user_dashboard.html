@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Dashboard - SafeFit</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body { margin: 0; font-family: Arial, sans-serif; background: #f0f4f8; }
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #2c3e50; color: white; }
+  .header h1 { margin: 0; }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #3498db; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+  .container { display: flex; }
+  .sidebar { width: 220px; background: #34495e; color: white; height: 100vh; padding: 20px; box-sizing: border-box; transition: transform 0.3s ease; }
+  .sidebar h2 { margin-top: 0; font-size: 20px; margin-bottom: 20px; }
+  .sidebar-menu { list-style: none; padding: 0; margin: 0; }
+  .sidebar-menu li { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+  .sidebar-menu li a { color: white; text-decoration: none; }
+  .sidebar-menu li a:hover { text-decoration: underline; }
+  .sidebar-footer { margin-top: 30px; }
+  .main-content { flex-grow: 1; padding: 30px; }
+  .welcome-banner h1 { margin-top: 0; }
+  .stats-grid { display: flex; gap: 20px; margin-top: 20px; }
+  .stat-card { flex: 1; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; }
+  .stat-icon { font-size: 30px; margin-bottom: 10px; }
+  .recent-activity { margin-top: 40px; }
+  .activity-list { list-style: none; padding: 0; }
+  .activity-item { display: flex; align-items: center; gap: 10px; background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .activity-icon { font-size: 20px; width: 30px; }
+  .notification-badge { background: red; color: white; font-size: 0.7rem; border-radius: 50%; padding: 2px 6px; margin-left: auto; }
+  @media (max-width: 768px) { .container { flex-direction: column; } .sidebar { width: 100%; height: auto; } .stats-grid { flex-direction: column; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1>Dashboard</h1>
+  <div class="user-info">
+    <div class="user-avatar" id="userAvatar">U</div>
+    <div>
+      <div id="welcome-user">Welcome, User!</div>
+      <div style="font-size:0.8rem;">Last login: <span id="lastLogin">--</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <aside class="sidebar" id="sidebar">
+    <h2>User Panel</h2>
+    <ul class="sidebar-menu">
+      <li><i class="fas fa-home"></i> <a href="#">Dashboard</a></li>
+      <li><i class="fas fa-shopping-bag"></i> <a href="#">My Orders</a></li>
+      <li><i class="fas fa-user"></i> <a href="#">My Profile</a></li>
+      <li><i class="fas fa-bell"></i> <a href="#">Notifications</a> <span class="notification-badge" id="notif-count">0</span></li>
+      <li><i class="fas fa-envelope"></i> <a href="#">Messages</a> <span class="notification-badge" id="messages-count-sidebar">0</span></li>
+      <li><i class="fas fa-cog"></i> <a href="#">Settings</a></li>
+      <li><i class="fas fa-question-circle"></i> <a href="#">Help & Support</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="welcome-banner">
+      <h1 id="welcome-message">Welcome back, User!</h1>
+      <p>Here's what's happening with your account today.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon orders"><i class="fas fa-shopping-bag"></i></div>
+        <div class="stat-value" id="orders-count">0</div>
+        <div class="stat-label">Active Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon messages"><i class="fas fa-envelope"></i></div>
+        <div class="stat-value" id="messages-count">0</div>
+        <div class="stat-label">Unread Messages</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon profile"><i class="fas fa-user"></i></div>
+        <div class="stat-value" id="profile-complete">0%</div>
+        <div class="stat-label">Profile Completeness</div>
+      </div>
+    </div>
+
+    <div class="recent-activity">
+      <div class="activity-header">
+        <h2>Recent Activity</h2>
+        <a href="#">View All</a>
+      </div>
+      <ul class="activity-list" id="activity-list">
+        <!-- Activity will be inserted here -->
+      </ul>
+    </div>
+  </main>
+</div>
+
+<script>
+// Redirect if not logged in or wrong role
+const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
+
+if (!token || role !== "Customer") {
+  alert("Access denied! Redirecting...");
+  window.location.href = "login.html";
+}
+
+// Fetch dashboard data
+async function fetchDashboard() {
+  try {
+    const res = await fetch("http://localhost:5000/api/users/me", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      populateDashboard(data);
+    } else {
+      alert(data.error || "Failed to load dashboard");
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      window.location.href = "login.html";
+    }
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
+}
+
+// Populate dashboard
+function populateDashboard(data) {
+  const username = data.username || "User";
+  document.getElementById("userAvatar").textContent = username.charAt(0).toUpperCase();
+  document.getElementById("welcome-user").textContent = `Welcome, ${username}!`;
+  document.getElementById("welcome-message").textContent = `Welcome back, ${username}!`;
+  document.getElementById("lastLogin").textContent = new Date().toLocaleString(); // placeholder
+
+  // Example static data (replace with real API calls)
+  document.getElementById("orders-count").textContent = 3;
+  document.getElementById("messages-count").textContent = 2;
+  document.getElementById("messages-count-sidebar").textContent = 2;
+  document.getElementById("notif-count").textContent = 1;
+  document.getElementById("profile-complete").textContent = "75%";
+
+  const activityList = document.getElementById("activity-list");
+  activityList.innerHTML = "";
+  const sampleActivity = [
+    { icon: "fa-shopping-cart", description: "Order #123 placed", time: "2 hours ago" },
+    { icon: "fa-envelope", description: "New message from support", time: "1 day ago" }
+  ];
+  sampleActivity.forEach(act => {
+    const li = document.createElement("li");
+    li.className = "activity-item";
+    li.innerHTML = `<div class="activity-icon"><i class="fas ${act.icon}"></i></div>
+                    <div class="activity-content">
+                      <div>${act.description}</div>
+                      <div class="activity-time">${act.time}</div>
+                    </div>`;
+    activityList.appendChild(li);
+  });
+}
+
+// Logout button
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  window.location.href = "login.html";
+});
+
+// Initialize
+fetchDashboard();
+</script>
+</body>
+</html>
+

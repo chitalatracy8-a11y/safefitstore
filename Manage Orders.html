@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Orders - Admin</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f1f1f1;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .nav {
+    background: #333;
+    padding: 12px 20px;
+  }
+
+  .nav a {
+    color: white;
+    margin-right: 20px;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .nav a:hover { text-decoration: underline; }
+
+  h2 { margin-top: 20px; color: #2c3e50; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  th, td {
+    padding: 12px;
+    border: 1px solid #ccc;
+    text-align: left;
+  }
+
+  th { background-color: #3498db; color: white; }
+  tr:nth-child(even) { background-color: #f9f9f9; }
+
+  button {
+    padding: 6px 12px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .btn-update { background-color: #28a745; color: white; }
+  .btn-cancel { background-color: #dc3545; color: white; }
+  .btn-update:hover, .btn-cancel:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="admin_dashboard.html">Back to Admin Dashboard</a>
+</div>
+
+<h2>Manage Orders</h2>
+
+<table id="ordersTable">
+  <thead>
+    <tr>
+      <th>Order ID</th>
+      <th>User</th>
+      <th>Product</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Orders will be populated here -->
+  </tbody>
+</table>
+
+<script>
+const API_URL = "http://localhost:5000/api/orders";
+const token = localStorage.getItem("token"); // Use same token for admin
+
+async function fetchOrders() {
+  try {
+    const res = await fetch(API_URL, {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    const orders = await res.json();
+
+    const tbody = document.querySelector("#ordersTable tbody");
+    tbody.innerHTML = "";
+
+    if (!orders.length) {
+      tbody.innerHTML = "<tr><td colspan='5' style='text-align:center'>No orders found.</td></tr>";
+      return;
+    }
+
+    orders.forEach(order => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${order.id}</td>
+        <td>${order.username}</td>
+        <td>${order.product_name}</td>
+        <td>${order.status}</td>
+        <td>
+          <button class="btn-update" onclick="updateOrder(${order.id})">Update</button>
+          <button class="btn-cancel" onclick="cancelOrder(${order.id})">Cancel</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("Error loading orders");
+  }
+}
+
+async function updateOrder(id) {
+  const newStatus = prompt("Enter new status (e.g., Pending, Shipped, Delivered):");
+  if (!newStatus) return;
+
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const result = await res.json();
+    if(result.success) fetchOrders();
+    else alert("Failed to update order");
+  } catch(err) {
+    console.error(err);
+    alert("Error updating order");
+  }
+}
+
+async function cancelOrder(id) {
+  if (!confirm("Are you sure you want to cancel this order?")) return;
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: "DELETE",
+      headers: { "Authorization": "Bearer " + token }
+    });
+    const result = await res.json();
+    if(result.success) fetchOrders();
+    else alert("Failed to cancel order");
+  } catch(err) {
+    console.error(err);
+    alert("Error cancelling order");
+  }
+}
+
+// Initial load
+fetchOrders();
+</script>
+
+</body>
+</html>
+

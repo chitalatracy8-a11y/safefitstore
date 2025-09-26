@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SafeFit Store - Register</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Reset & base */
+* { margin:0; padding:0; box-sizing:border-box; font-family: 'Roboto', sans-serif; }
+
+body {
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('images/BACKGROUNDCONTACT.jpg') center/cover no-repeat;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-card {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 40px 30px;
+  width: 380px;
+  max-width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  animation: slideUp 0.8s ease forwards;
+  color: #fff;
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 25px;
+  font-size: 2rem;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+}
+
+form { display: flex; flex-direction: column; gap: 15px; }
+
+input, select {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  font-size: 14px;
+  transition: all 0.3s;
+}
+input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 8px #00C851;
+}
+
+button {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #00C851;
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+button:hover {
+  background: #007f3f;
+  transform: translateY(-2px);
+}
+
+.strength-bar {
+  width: 100%;
+  height: 8px;
+  background: #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.strength-bar #strengthFill {
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s, background 0.3s;
+}
+.strength-message {
+  margin-top: 5px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.error-message { color: #ff4444; font-weight: bold; margin-top: 10px; }
+.success-message { color: #00ff99; font-weight: bold; margin-top: 10px; }
+
+.link { margin-top: 15px; }
+.link a {
+  color: #ffd700;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+.link a:hover { color: #fff; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+</style>
+</head>
+<body>
+
+<div class="register-card">
+  <h2>Create Account</h2>
+  <form id="registerForm">
+    <input type="text" name="username" placeholder="Username" required />
+    <input type="email" name="email" placeholder="Email Address" required />
+    
+    <input type="password" name="password" id="password" placeholder="Password" required />
+    <div class="strength-bar"><div id="strengthFill"></div></div>
+    <div id="strengthMessage" class="strength-message"></div>
+
+    <input type="password" name="confirm_password" placeholder="Confirm Password" required />
+    
+    <select name="role" required>
+      <option value="">-- Select Role --</option>
+      <option value="Customer">Customer</option>
+      <option value="Admin">Admin</option>
+    </select>
+    
+    <button type="submit">Register</button>
+  </form>
+
+  <div id="formMessage"></div>
+  <div class="link">
+    Already have an account? <a href="login.html">Login here</a>
+  </div>
+</div>
+
+<script>
+const registerForm = document.getElementById('registerForm');
+const formMessage = document.getElementById('formMessage');
+const passwordInput = document.getElementById('password');
+const strengthMessage = document.getElementById('strengthMessage');
+const strengthFill = document.getElementById('strengthFill');
+
+// Password strength meter
+passwordInput.addEventListener('input', () => {
+  const value = passwordInput.value;
+  let strength = "";
+  let width = 0;
+  let color = "#ff4444";
+
+  if (value.length < 4) {
+    strength = "Too short";
+    width = 25;
+    color = "#ff4444";
+  } else if (/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{4,}$/.test(value)) {
+    strength = "Strong password";
+    width = 100;
+    color = "#00C851";
+  } else if (/^(?=.*[a-z])(?=.*\d).{4,}$/.test(value)) {
+    strength = "Medium password";
+    width = 60;
+    color = "#ffbb33";
+  } else {
+    strength = "Weak password";
+    width = 40;
+    color = "#ff4444";
+  }
+
+  strengthMessage.textContent = strength;
+  strengthFill.style.width = width + "%";
+  strengthFill.style.background = color;
+});
+
+// Form submit
+registerForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const username = registerForm.username.value.trim();
+  const email = registerForm.email.value.trim();
+  const password = registerForm.password.value;
+  const confirm_password = registerForm.confirm_password.value;
+  const role = registerForm.role.value;
+
+  if (password !== confirm_password) {
+    formMessage.textContent = "Passwords do not match!";
+    formMessage.className = "error-message";
+    return;
+  }
+  if (password.length < 4) {
+    formMessage.textContent = "Password must be at least 4 characters.";
+    formMessage.className = "error-message";
+    return;
+  }
+  if (!role) {
+    formMessage.textContent = "Please select a role.";
+    formMessage.className = "error-message";
+    return;
+  }
+
+  try {
+    const button = registerForm.querySelector("button");
+    button.disabled = true;
+    button.textContent = "Registering...";
+
+    const res = await fetch("http://localhost:5000/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password, role })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      formMessage.textContent = data.message || "Registration successful!";
+      formMessage.className = "success-message";
+      setTimeout(() => window.location.href = "login.html", 1500);
+    } else {
+      formMessage.textContent = data.error || data.message || "Registration failed. Try again.";
+      formMessage.className = "error-message";
+    }
+  } catch (err) {
+    formMessage.textContent = "Server error: " + err.message;
+    formMessage.className = "error-message";
+  } finally {
+    const button = registerForm.querySelector("button");
+    button.disabled = false;
+    button.textContent = "Register";
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discounts | SafeFit Store</title>
+<style>
+  body { font-family: Arial, sans-serif; margin:0; background:#f4f6f9; color:#333; }
+  header { background:#2c3e50; color:white; padding:1rem; text-align:center; }
+  header nav { margin-top:0.5rem; }
+  header nav a { color:white; text-decoration:none; margin:0 15px; font-weight:bold; }
+  header nav a:hover { text-decoration:underline; }
+  main { max-width:800px; margin:2rem auto; padding:2rem; background:white; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+  h2 { text-align:center; color:#2c3e50; margin-bottom:20px; }
+  .discount-form { display:flex; flex-direction:column; gap:15px; max-width:400px; margin:0 auto 30px; }
+  .discount-form input { padding:12px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
+  .discount-form button { padding:12px; border:none; border-radius:6px; background:#3498db; color:white; font-weight:bold; cursor:pointer; transition:background 0.3s; }
+  .discount-form button:hover { background:#2980b9; }
+  .message { text-align:center; font-weight:bold; margin-top:10px; }
+  .active-discounts { margin-top:30px; }
+  .active-discounts table { width:100%; border-collapse:collapse; text-align:left; }
+  .active-discounts th, .active-discounts td { padding:12px; border-bottom:1px solid #ddd; }
+  .active-discounts th { background:#3498db; color:white; }
+  @media(max-width:500px){ header nav { display:flex; flex-direction:column; gap:10px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SafeFit Store Discounts</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="product.html">Products</a>
+    <a href="discount.html">Discounts</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <h2>Apply Your Discount Code</h2>
+  <form class="discount-form" id="discountForm">
+    <input type="text" id="discountCode" placeholder="Enter discount code" required>
+    <button type="submit">Apply Code</button>
+    <div class="message" id="message"></div>
+  </form>
+
+  <div class="active-discounts">
+    <h2>Active Discounts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Description</th>
+          <th>Discount %</th>
+          <th>Valid Until</th>
+        </tr>
+      </thead>
+      <tbody id="discountTableBody">
+        <tr><td colspan="4" style="text-align:center;">Loading discounts...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+  const discountForm = document.getElementById('discountForm');
+  const message = document.getElementById('message');
+  const discountTableBody = document.getElementById('discountTableBody');
+  const API_URL = 'http://localhost:5000/api/promotions';
+
+  let discounts = [];
+
+  // Load all active discounts from backend
+  async function loadDiscounts() {
+    try {
+      const res = await fetch(API_URL);
+      discounts = await res.json();
+      discountTableBody.innerHTML = '';
+      if(discounts.length === 0){
+        discountTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No active discounts.</td></tr>';
+        return;
+      }
+      discounts.forEach(discount => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${discount.title}</td>
+          <td>${discount.description}</td>
+          <td>${discount.discount}%</td>
+          <td>${new Date(discount.end_date).toLocaleDateString()}</td>
+        `;
+        discountTableBody.appendChild(row);
+      });
+    } catch(err){
+      discountTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Error loading discounts.</td></tr>';
+      console.error(err);
+    }
+  }
+
+  loadDiscounts();
+
+  // Handle discount code submission
+  discountForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const code = document.getElementById('discountCode').value.trim();
+
+    const found = discounts.find(d => d.title.toUpperCase() === code.toUpperCase());
+    if(found){
+      message.style.color = 'green';
+      message.textContent = `Success! Discount applied: ${found.discount}% off.`;
+    } else {
+      message.style.color = 'red';
+      message.textContent = 'Invalid discount code.';
+    }
+
+    discountForm.reset();
+  });
+</script>
+
+</body>
+</html>
